@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,17 +22,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
 	
 	private final UserService userService;
 	private final ClientRegistration registration;
 	
+    public AuthController(UserService userService, ClientRegistrationRepository registration) {
+        this.userService = userService;
+        this.registration = registration.findByRegistrationId("okta");
+    }
 	
 	@GetMapping("/get-authenticated-user")
 	public ResponseEntity<ReadUserDTO> getAuthenticatedUser(@RequestParam boolean forceResync){
-		OAuth2User user = (OAuth2User) SecurityContextHolder.getContext().getAuthentication();
+		OAuth2User user = (OAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		if (user == null) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {

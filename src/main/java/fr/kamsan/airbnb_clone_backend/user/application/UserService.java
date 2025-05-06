@@ -27,8 +27,8 @@ public class UserService {
 	
 	@Transactional(readOnly = true)
 	public ReadUserDTO getAuthenticatedUserFromSecurityContext() {
-		OAuth2User principal = (OAuth2User) SecurityContextHolder.getContext().getAuthentication();
-		User user = SecurityUtils.map0auth2AttributesToUser(principal.getAttributes());
+		OAuth2User principal = (OAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		User user = SecurityUtils.mapOauth2AttributesToUser(principal.getAttributes());
 		return getByEmail(user.getEmail()).orElseThrow();
 	}
 	
@@ -39,7 +39,7 @@ public class UserService {
 	
     public void syncWithIdp(OAuth2User oAuth2User, boolean forceResync) {
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        User user = SecurityUtils.map0auth2AttributesToUser(attributes);
+        User user = SecurityUtils.mapOauth2AttributesToUser(attributes);
         Optional<User> existingUser = userRepository.findOneByEmail(user.getEmail());
         if (existingUser.isPresent()) {
             if (attributes.get(UPDATED_AT_KEY) != null) {
