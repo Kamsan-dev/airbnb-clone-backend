@@ -7,6 +7,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.kamsan.airbnb_clone_backend.user.application.UserService;
 import fr.kamsan.airbnb_clone_backend.user.application.dto.ReadUserDTO;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -27,15 +28,19 @@ public class AuthController {
 	
 	private final UserService userService;
 	private final ClientRegistration registration;
-	
-    public AuthController(UserService userService, ClientRegistrationRepository registration) {
-        this.userService = userService;
-        this.registration = registration.findByRegistrationId("okta");
-    }
-	
+
+	public AuthController(UserService userService,
+	                      ClientRegistrationRepository registrationRepository,
+	                      OAuth2AuthorizedClientService authorizedClientService) {
+	    this.userService = userService;
+	    this.registration = registrationRepository.findByRegistrationId("okta");
+	}
+
+
 	@GetMapping("/get-authenticated-user")
-	public ResponseEntity<ReadUserDTO> getAuthenticatedUser(@RequestParam boolean forceResync){
+	public ResponseEntity<ReadUserDTO> getAuthenticatedUser(@RequestParam boolean forceResync, OAuth2AuthenticationToken authentication){
 		OAuth2User user = (OAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
 		if (user == null) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {
