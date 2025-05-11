@@ -1,4 +1,4 @@
-package fr.kamsan.airbnb_clone_backend.user.application;
+package fr.kamsan.airbnb_clone_backend.user.application.service;
 
 import java.util.List;
 import java.util.UUID;

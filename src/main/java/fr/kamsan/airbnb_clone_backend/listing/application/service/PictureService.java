@@ -1,4 +1,4 @@
-package fr.kamsan.airbnb_clone_backend.listing.application;
+package fr.kamsan.airbnb_clone_backend.listing.application.service;
 
 import java.util.List;
 import java.util.Set;
