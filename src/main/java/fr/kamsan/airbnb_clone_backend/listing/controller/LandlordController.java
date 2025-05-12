@@ -44,7 +44,7 @@ import lombok.extern.java.Log;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/landlord-listing")
-public class ListingController {
+public class LandlordController {
 
 	private final ListingService listingService;
 	private final Validator validator;

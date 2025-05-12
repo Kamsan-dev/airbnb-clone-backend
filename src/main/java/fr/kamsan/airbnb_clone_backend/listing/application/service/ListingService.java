@@ -17,9 +17,11 @@ import fr.kamsan.airbnb_clone_backend.user.application.dto.ReadUserDTO;
 import fr.kamsan.airbnb_clone_backend.user.application.service.Auth0Service;
 import fr.kamsan.airbnb_clone_backend.user.application.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ListingService {
 	
 	
