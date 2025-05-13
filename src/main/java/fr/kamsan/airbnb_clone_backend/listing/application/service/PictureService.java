@@ -22,6 +22,8 @@ public class PictureService {
 	
 	public List<PictureDTO> saveAll(List<PictureDTO> pictures, Listing listing){
 		Set<ListingPicture> newPictures = listingPictureMapper.pictureDTOtoListingPicture(pictures);
+		System.out.println("Number of picture from DTO list : " + pictures.size());
+		System.out.println("Number of picture after mapping : " + newPictures.size());
 		
 		boolean isFirst = true;
 		for(ListingPicture picture : newPictures) {

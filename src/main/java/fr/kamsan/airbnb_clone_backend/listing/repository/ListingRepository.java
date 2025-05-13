@@ -1,6 +1,7 @@
 package fr.kamsan.airbnb_clone_backend.listing.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -26,5 +27,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 	@Query("SELECT listing FROM Listing listing LEFT JOIN FETCH listing.pictures picture "
 		     + "WHERE picture.isCover = true")
 	Page<Listing> findAllWithCoverOnly(Pageable pageable);
+	
+	Optional<Listing> findByPublicId(UUID publicId);
 
 }

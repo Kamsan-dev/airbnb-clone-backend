@@ -1,5 +1,8 @@
 package fr.kamsan.airbnb_clone_backend.listing.domain;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import fr.kamsan.airbnb_clone_backend.sharedkernel.domain.AbstractAuditingEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,5 +46,18 @@ public class ListingPicture extends AbstractAuditingEntity<Long> {
     @Override
     public Long getId() {
         return id;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ListingPicture that = (ListingPicture) o;
+        return isCover == that.isCover && Objects.deepEquals(file, that.file) && Objects.equals(fileContentType, that.fileContentType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Arrays.hashCode(file), fileContentType, isCover);
     }
 }

@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.CreatedListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayCardListingDTO;
+import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.ListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.vo.PriceVO;
 import fr.kamsan.airbnb_clone_backend.listing.domain.Listing;
@@ -45,4 +46,16 @@ public interface ListingMapper {
     default PriceVO mapPriceToPriceVO(int price) {
         return new PriceVO(price);
     }
+    
+    @Mapping(source = "title", target = "description.title.value")
+    @Mapping(source = "description", target = "description.description.value")
+    @Mapping(source = "bookingCategory", target = "category")
+    @Mapping(source = "guests", target = "infos.guests.value")
+    @Mapping(source = "beds", target = "infos.beds.value")
+    @Mapping(source = "bathrooms", target = "infos.baths.value")
+    @Mapping(source = "bedrooms", target = "infos.bedrooms.value")
+    @Mapping(target = "landlord", ignore = true)
+    @Mapping(source = "price", target = "price.value")
+    DisplayListingDTO listingtoDisplayListingDTO(Listing listing);
+    
 }
