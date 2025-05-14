@@ -1,6 +1,7 @@
 package fr.kamsan.airbnb_clone_backend.listing.application.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.CreatedListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayCardListingDTO;
+import fr.kamsan.airbnb_clone_backend.listing.application.dto.ListingCreateBookingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.ListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.domain.Listing;
 import fr.kamsan.airbnb_clone_backend.listing.mapper.ListingMapper;
@@ -63,6 +65,10 @@ public class ListingService {
 		} else {
 			return State.<UUID, String>builder().forUnauthorized("User not authorized to delete this listing");
 		}
+	}
+	
+	public Optional<ListingCreateBookingDTO> getByListingPublicId(UUID publicId){
+			return listingRepository.findByPublicId(publicId).map(listingMapper::listingToListingCreateBookingDTO);
 	}
 
 }

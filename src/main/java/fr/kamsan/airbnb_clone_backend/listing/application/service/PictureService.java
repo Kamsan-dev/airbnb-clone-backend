@@ -15,24 +15,21 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PictureService {
-	
+
 	private final ListingPictureRepository listingPictureRepository;
 	private final ListingPictureMapper listingPictureMapper;
-	
-	
-	public List<PictureDTO> saveAll(List<PictureDTO> pictures, Listing listing){
+
+	public List<PictureDTO> saveAll(List<PictureDTO> pictures, Listing listing) {
 		Set<ListingPicture> newPictures = listingPictureMapper.pictureDTOtoListingPicture(pictures);
-		System.out.println("Number of picture from DTO list : " + pictures.size());
-		System.out.println("Number of picture after mapping : " + newPictures.size());
-		
+
 		boolean isFirst = true;
-		for(ListingPicture picture : newPictures) {
+		for (ListingPicture picture : newPictures) {
 			picture.setCover(isFirst);
 			picture.setListing(listing);
 			isFirst = false;
 		}
 		listingPictureRepository.saveAll(newPictures);
-		return listingPictureMapper.listingPicturetoPictureDTO(newPictures);		
+		return listingPictureMapper.listingPicturetoPictureDTO(newPictures);
 	}
 
 }
