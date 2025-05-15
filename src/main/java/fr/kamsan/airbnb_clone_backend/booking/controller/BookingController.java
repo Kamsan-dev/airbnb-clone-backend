@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +19,7 @@ import fr.kamsan.airbnb_clone_backend.booking.application.dto.BookedDateDTO;
 import fr.kamsan.airbnb_clone_backend.booking.application.dto.BookedListingDTO;
 import fr.kamsan.airbnb_clone_backend.booking.application.dto.NewBookingDTO;
 import fr.kamsan.airbnb_clone_backend.booking.application.service.BookingService;
+import fr.kamsan.airbnb_clone_backend.infrastructure.config.SecurityUtils;
 import fr.kamsan.airbnb_clone_backend.sharedkernel.service.State;
 import fr.kamsan.airbnb_clone_backend.sharedkernel.service.StatusNotification;
 import jakarta.validation.Valid;
@@ -54,8 +55,9 @@ public class BookingController {
 	}
 
 	@DeleteMapping("cancel")
-	public ResponseEntity<UUID> cancel(@RequestParam UUID bookingPublicId, @RequestParam UUID listingPublicId) {
-		State<UUID, String> cancelState = bookingService.cancel(bookingPublicId, listingPublicId);
+	public ResponseEntity<UUID> cancel(@RequestParam UUID bookingPublicId, @RequestParam UUID listingPublicId,
+			@RequestParam boolean byLandlord) {
+		State<UUID, String> cancelState = bookingService.cancel(bookingPublicId, listingPublicId, byLandlord);
 		if (cancelState.getStatus().equals(StatusNotification.OK)) {
 			return ResponseEntity.ok(cancelState.getValue());
 		} else {
@@ -63,6 +65,12 @@ public class BookingController {
 					cancelState.getError());
 			return ResponseEntity.of(problemDetail).build();
 		}
+	}
+	
+	@GetMapping("get-booked-listing-for-landlord")
+	@PreAuthorize("hasAnyRole('" + SecurityUtils.ROLE_LANDLORD + "')")
+	public ResponseEntity<List<BookedListingDTO>> getBookedListingsForLandlord() {
+		return ResponseEntity.ok(bookingService.getAllBookedListingForTheLandlord());
 	}
 
 }

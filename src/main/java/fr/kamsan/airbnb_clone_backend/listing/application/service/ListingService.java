@@ -25,39 +25,37 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class ListingService {
-	
-	
+
 	private final ListingRepository listingRepository;
 	private final UserService userService;
 	private final Auth0Service auth0Service;
 	private final ListingMapper listingMapper;
 	private final PictureService pictureService;
-	
-	
+
 	public CreatedListingDTO create(ListingDTO listingDTO) {
 		/* set publicId of landlord to the new listing */
 		Listing newListing = listingMapper.listingDTOToListing(listingDTO);
 		ReadUserDTO userConnected = userService.getAuthenticatedUserFromSecurityContext();
 		newListing.setLandlordPublicId(userConnected.publicId());
-		
+
 		/* Save new listing and his pictures */
 		Listing savedListing = listingRepository.saveAndFlush(newListing);
 		pictureService.saveAll(listingDTO.getPictures(), savedListing);
-		
+
 		/* Set user to landlord */
 		auth0Service.addLandlordRoleToUser(userConnected);
-		
+
 		return listingMapper.listingToCreatedListingDTO(savedListing);
 	}
-	
+
 	@Transactional(readOnly = true)
-	public List<DisplayCardListingDTO> getAllPropertiesByPublicId(ReadUserDTO landlord){
+	public List<DisplayCardListingDTO> getAllPropertiesByPublicId(ReadUserDTO landlord) {
 		List<Listing> properties = listingRepository.findAllByLandLordPublicIdFetchCoverPicture(landlord.publicId());
 		return listingMapper.listingToDisplayCardListingDTOs(properties);
 	}
-	
+
 	@Transactional
-	public State<UUID, String> delete(UUID publicId, ReadUserDTO landlord){
+	public State<UUID, String> delete(UUID publicId, ReadUserDTO landlord) {
 		long deletedSuccessfully = listingRepository.deleteByPublicIdAndLandlordPublicId(publicId, landlord.publicId());
 		/* number of rows deleted */
 		if (deletedSuccessfully > 0) {
@@ -66,13 +64,22 @@ public class ListingService {
 			return State.<UUID, String>builder().forUnauthorized("User not authorized to delete this listing");
 		}
 	}
-	
-	public Optional<ListingCreateBookingDTO> getByListingPublicId(UUID publicId){
-			return listingRepository.findByPublicId(publicId).map(listingMapper::listingToListingCreateBookingDTO);
+
+	public Optional<ListingCreateBookingDTO> getByListingPublicId(UUID publicId) {
+		return listingRepository.findByPublicId(publicId).map(listingMapper::listingToListingCreateBookingDTO);
 	}
-	
-	public List<DisplayCardListingDTO> getCardDisplayByListingPublicId(List<UUID> allListingPublicId){
-		return listingRepository.findAllByPublicIdIn(allListingPublicId).stream().map(listingMapper::listingToDisplayCardListingDTO).toList();
+
+	public List<DisplayCardListingDTO> getCardDisplayByListingPublicId(List<UUID> allListingPublicId) {
+		return listingRepository.findAllByPublicIdIn(allListingPublicId).stream()
+				.map(listingMapper::listingToDisplayCardListingDTO).toList();
+	}
+
+	@Transactional(readOnly = true)
+	public Optional<DisplayCardListingDTO> getByPublicIdAndLandlordPublicId(UUID listingPublicId,
+			UUID landlordPublicId) {
+		return listingRepository.findOneByPublicIdAndLandlordPublicId(listingPublicId, landlordPublicId)
+				.map(listingMapper::listingToDisplayCardListingDTO);
+
 	}
 
 }

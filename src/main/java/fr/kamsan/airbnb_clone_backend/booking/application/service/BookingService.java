@@ -14,7 +14,9 @@ import fr.kamsan.airbnb_clone_backend.booking.application.dto.NewBookingDTO;
 import fr.kamsan.airbnb_clone_backend.booking.domain.Booking;
 import fr.kamsan.airbnb_clone_backend.booking.mapper.BookingMapper;
 import fr.kamsan.airbnb_clone_backend.booking.repository.BookingRepository;
+import fr.kamsan.airbnb_clone_backend.infrastructure.config.SecurityUtils;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayCardListingDTO;
+import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.ListingCreateBookingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.vo.PriceVO;
 import fr.kamsan.airbnb_clone_backend.listing.application.service.ListingService;
@@ -65,8 +67,7 @@ public class BookingService {
 
 	@Transactional(readOnly = true)
 	public List<BookedDateDTO> checkAvailability(UUID publicId) {
-		return bookingRepository.findAllByFkListing(publicId).stream().map(bookingMapper::bookingRangeDates)
-				.toList();
+		return bookingRepository.findAllByFkListing(publicId).stream().map(bookingMapper::bookingRangeDates).toList();
 	}
 
 	@Transactional(readOnly = true)
@@ -77,27 +78,59 @@ public class BookingService {
 		List<DisplayCardListingDTO> allListings = listingService.getCardDisplayByListingPublicId(allListingPublicIDs);
 		return mapBookingToBookedListing(allBookings, allListings);
 	}
-	
+
 	private List<BookedListingDTO> mapBookingToBookedListing(List<Booking> allBookings,
 			List<DisplayCardListingDTO> allListings) {
-		
+
 		return allBookings.stream().map(booking -> {
-			DisplayCardListingDTO displayCardListingDTO = allListings.stream().filter(listing -> listing.publicId().equals(booking.getFkListing())).findFirst().orElseThrow();
+			DisplayCardListingDTO displayCardListingDTO = allListings.stream()
+					.filter(listing -> listing.publicId().equals(booking.getFkListing())).findFirst().orElseThrow();
 			BookedDateDTO dates = bookingMapper.bookingRangeDates(booking);
-			return new BookedListingDTO(displayCardListingDTO.cover(), displayCardListingDTO.location(), dates, 
+			return new BookedListingDTO(displayCardListingDTO.cover(), displayCardListingDTO.location(), dates,
 					new PriceVO(booking.getTotalPrice()), booking.getPublicId(), displayCardListingDTO.publicId());
 		}).toList();
 	}
-	
+
 	@Transactional
-	public State<UUID, String> cancel(UUID bookingPublicId, UUID listingPublicId){
+	public State<UUID, String> cancel(UUID bookingPublicId, UUID listingPublicId, boolean byLandlord) {
 		ReadUserDTO connectedUser = userService.getAuthenticatedUserFromSecurityContext();
-		Long deleteSuccess = bookingRepository.deleteBookingByFkTenantAndPublicId(connectedUser.publicId(), bookingPublicId);
-		if (deleteSuccess > 0) {
+		int deleteCount = 0;
+
+		/* if the cancel is called by the landlord */
+		if (SecurityUtils.hasCurrentUserAnyOfAuthorities(SecurityUtils.ROLE_LANDLORD) && byLandlord) {
+			deleteCount = handleDeletionForLandlord(bookingPublicId, listingPublicId, connectedUser, deleteCount);
+		} else {
+			deleteCount = bookingRepository.deleteBookingByFkTenantAndPublicId(connectedUser.publicId(),
+					bookingPublicId);
+		}
+
+		if (deleteCount > 0) {
 			return State.<UUID, String>builder().forSuccess(bookingPublicId);
 		} else {
-			return State.<UUID, String>builder().forError("Booking not found or user not authorized to delete this booking");
+			return State.<UUID, String>builder()
+					.forError("Booking not found or user not authorized to delete this booking");
 		}
+	}
+
+	/* if there is a listing for the given landlord, we delete the booking associated to the listing */
+	private int handleDeletionForLandlord(UUID bookingPublicId, UUID listingPublicId, ReadUserDTO connectedUser,
+			int deleteCount) {
+		Optional<DisplayCardListingDTO> listingVerificationOpt = listingService
+				.getByPublicIdAndLandlordPublicId(listingPublicId, connectedUser.publicId());
+		if (listingVerificationOpt.isPresent()) {
+			deleteCount = bookingRepository.deleteBookingByPublicIdAndFkListing(bookingPublicId,
+					listingVerificationOpt.get().publicId());
+		}
+		return deleteCount;
+	}
+	
+	@Transactional(readOnly = true)
+	public List<BookedListingDTO> getAllBookedListingForTheLandlord(){
+		ReadUserDTO connectedUser = userService.getAuthenticatedUserFromSecurityContext();
+		List<DisplayCardListingDTO> allProperties = listingService.getAllPropertiesByPublicId(connectedUser);
+		List<UUID> allPropertiesByPublicIds = allProperties.stream().map(DisplayCardListingDTO::publicId).toList();
+		List<Booking> allBookings= bookingRepository.findAllByFkListingIn(allPropertiesByPublicIds);
+		return mapBookingToBookedListing(allBookings, allProperties);
 	}
 
 }
