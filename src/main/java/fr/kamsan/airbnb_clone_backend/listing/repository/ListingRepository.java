@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayCardListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.domain.BookingCategory;
 import fr.kamsan.airbnb_clone_backend.listing.domain.Listing;
 
@@ -29,5 +30,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 	Page<Listing> findAllWithCoverOnly(Pageable pageable);
 	
 	Optional<Listing> findByPublicId(UUID publicId);
+
+	List<Listing> findAllByPublicIdIn(List<UUID> allListingPublicId);
 
 }

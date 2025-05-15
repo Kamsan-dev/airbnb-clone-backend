@@ -12,6 +12,6 @@ public interface BookingMapper {
 	
 	Booking newBookingDTOToBooking(NewBookingDTO newBookingDTO);
 	
-	BookedDateDTO bookingToCheckAvailability(Booking booking);
+	BookedDateDTO bookingRangeDates(Booking booking);
 
 }
