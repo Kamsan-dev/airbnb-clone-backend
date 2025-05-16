@@ -8,16 +8,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayCardListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayListingDTO;
+import fr.kamsan.airbnb_clone_backend.listing.application.dto.SearchDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.service.TenantService;
 import fr.kamsan.airbnb_clone_backend.listing.domain.BookingCategory;
 import fr.kamsan.airbnb_clone_backend.sharedkernel.service.State;
 import fr.kamsan.airbnb_clone_backend.sharedkernel.service.StatusNotification;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,4 +49,11 @@ public class TenantController {
 			return ResponseEntity.of(problemDetail).build();
 		}
 	}
+
+	@PostMapping("/search")
+	public ResponseEntity<Page<DisplayCardListingDTO>> findAllByCriteria(Pageable pageable,
+			@RequestBody @Valid SearchDTO searchDTO) {
+		return ResponseEntity.ok(tenantService.search(pageable, searchDTO));
+	}
+
 }

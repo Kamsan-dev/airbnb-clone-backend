@@ -35,4 +35,6 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
 	Optional<Listing> findOneByPublicIdAndLandlordPublicId(UUID listingPublicId, UUID landlordPublicId);
 
+	Page<Listing> findAllByLocationAndBathroomsAndBedroomsAndGuestsAndBeds(Pageable pageable, String location, int bathrooms, int bedrooms, int guests, int beds);
+
 }

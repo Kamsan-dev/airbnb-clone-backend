@@ -1,15 +1,19 @@
 package fr.kamsan.airbnb_clone_backend.listing.application.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import fr.kamsan.airbnb_clone_backend.booking.application.service.BookingService;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayCardListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.DisplayListingDTO;
+import fr.kamsan.airbnb_clone_backend.listing.application.dto.SearchDTO;
 import fr.kamsan.airbnb_clone_backend.listing.application.dto.sub.LandlordListingDTO;
 import fr.kamsan.airbnb_clone_backend.listing.domain.BookingCategory;
 import fr.kamsan.airbnb_clone_backend.listing.domain.Listing;
@@ -26,6 +30,7 @@ public class TenantService {
 
 	private final ListingRepository listingRepository;
 	private final UserService userService;
+	private final BookingService bookingService;
 	private final ListingMapper listingMapper;
 
 	public Page<DisplayCardListingDTO> getAllListingByCategory(Pageable pageable, BookingCategory category) {
@@ -56,6 +61,28 @@ public class TenantService {
 
 		return State.<DisplayListingDTO, String>builder().forSuccess(displayListingDTO);
 
+	}
+
+	@Transactional(readOnly = true)
+	public Page<DisplayCardListingDTO> search(Pageable pageable, SearchDTO newSearch) {
+		Page<Listing> allMatchedListings = listingRepository.findAllByLocationAndBathroomsAndBedroomsAndGuestsAndBeds(
+				pageable, newSearch.location(), newSearch.infos().baths().value(), newSearch.infos().bedrooms().value(),
+				newSearch.infos().guests().value(), newSearch.infos().beds().value());
+
+		/* Gathering uuid of listings that match user criteria */
+		List<UUID> listingsUUID = allMatchedListings.stream().map(Listing::getPublicId).toList();
+		/* Gathering uuid of bookings that overlaps user search dates */
+		List<UUID> bookingUUIDs = bookingService.getBookingMatchByListingIdsAndBookedDate(listingsUUID,
+				newSearch.dates());
+
+		/*
+		 * Keeping only listings that are not booked on the user search dates criteria
+		 */
+		List<DisplayCardListingDTO> listingsNotBooked = allMatchedListings.stream()
+				.filter(listing -> !bookingUUIDs.contains(listing.getPublicId()))
+				.map(listingMapper::listingToDisplayCardListingDTO).toList();
+
+		return new PageImpl<>(listingsNotBooked, pageable, listingsNotBooked.size());
 	}
 
 }
