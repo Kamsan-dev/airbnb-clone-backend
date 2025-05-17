@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,9 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration {
+	
+	@Value("${spring.profiles.active")
+	private String activeProfiles;
 
 	@Bean
 	public SecurityFilterChain configure(HttpSecurity http) throws Exception {
@@ -41,14 +45,16 @@ public class SecurityConfiguration {
 				.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
 						.csrfTokenRequestHandler(requestHandler))
 				.cors(Customizer.withDefaults())
-				.oauth2Login(Customizer.withDefaults())
 				.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-				.oauth2Client(Customizer.withDefaults())
 				.exceptionHandling(exceptions -> exceptions
 			            .defaultAuthenticationEntryPointFor(
 			                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
 			                new AntPathRequestMatcher("/api/**")
 			            ));
+        
+        if (activeProfiles.equals("prod")) {
+            http.requiresChannel(channel-> channel.anyRequest().requiresSecure());
+        }
 
 		return http.build();
 	}
@@ -62,8 +68,8 @@ public class SecurityConfiguration {
 			authorities.forEach(grantedAuthority -> {
 				if (grantedAuthority instanceof OidcUserAuthority oidcUserAuthority) {
 					Map<String, Object> userInfoClaims = oidcUserAuthority.getUserInfo().getClaims();
-                    System.out.println("==== UserInfo Claims ====");
-                    userInfoClaims.forEach((k, v) -> System.out.println(k + ": " + v));
+//                    System.out.println("==== UserInfo Claims ====");
+//                    userInfoClaims.forEach((k, v) -> System.out.println(k + ": " + v));
 					grantedAuthorities.addAll(
 							SecurityUtils.extractAuthorityFromClaims(oidcUserAuthority.getUserInfo().getClaims()));
 				}

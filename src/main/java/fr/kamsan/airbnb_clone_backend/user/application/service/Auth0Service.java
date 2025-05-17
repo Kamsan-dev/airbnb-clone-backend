@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import com.auth0.client.auth.AuthAPI;
@@ -11,6 +12,7 @@ import com.auth0.client.mgmt.ManagementAPI;
 import com.auth0.client.mgmt.filter.FieldsFilter;
 import com.auth0.exception.Auth0Exception;
 import com.auth0.json.auth.TokenHolder;
+import com.auth0.json.auth.UserInfo;
 import com.auth0.json.mgmt.users.User;
 import com.auth0.net.Response;
 import com.auth0.net.TokenRequest;
@@ -59,5 +61,15 @@ public class Auth0Service {
         TokenHolder holder = tokenRequest.execute().getBody();
         return holder.getAccessToken();
     }
+    
+    public UserInfo getUserInfo(Jwt jwtToken) {
+        AuthAPI authAPI = AuthAPI.newBuilder(domain, clientId, clientSecret).build();
+        try {
+        	return authAPI.userInfo(jwtToken.getTokenValue()).execute().getBody();
+        } catch (Auth0Exception e) {
+        	throw new UserException(String.format("not possible to fetch the user informations %s", jwtToken.getTokenValue()));
+        }
+    }
+    
 
 }
