@@ -1,6 +1,5 @@
 package fr.kamsan.airbnb_clone_backend.infrastructure.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -9,8 +8,14 @@ import org.springframework.web.cors.CorsConfiguration;
 public class CorsProperties {
 
 	@Bean
-	@ConfigurationProperties(prefix = "application.cors", ignoreUnknownFields = false)
-	public CorsConfiguration corsConfiguration() {
-		return new CorsConfiguration();
+	public CorsConfiguration corsConfiguration(CorsProps props) {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(props.getAllowedOrigins());
+		config.setAllowedMethods(props.getAllowedMethods());
+		config.setAllowedHeaders(props.getAllowedHeaders());
+		config.setExposedHeaders(props.getExposedHeaders());
+		config.setAllowCredentials(props.getAllowCredentials());
+		config.setMaxAge(props.getMaxAge());
+		return config;
 	}
 }

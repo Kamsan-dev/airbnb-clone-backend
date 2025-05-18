@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CorsFilterConfiguration {
 
-	private CorsConfiguration corsConfiguration;
+	private final CorsConfiguration corsConfiguration;
 
 	@Bean
 	public FilterRegistrationBean<CorsFilter> simpleCorsFilter() {
@@ -24,5 +24,4 @@ public class CorsFilterConfiguration {
 		bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
 		return bean;
 	}
-
 }

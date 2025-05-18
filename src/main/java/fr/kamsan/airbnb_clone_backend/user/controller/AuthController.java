@@ -2,8 +2,7 @@ package fr.kamsan.airbnb_clone_backend.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +24,7 @@ public class AuthController {
 
 
 	@GetMapping("/get-authenticated-user")
-	public ResponseEntity<ReadUserDTO> getAuthenticatedUser(@RequestParam boolean forceResync, OAuth2AuthenticationToken authentication){
-		Jwt user = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	public ResponseEntity<ReadUserDTO> getAuthenticatedUser(@RequestParam boolean forceResync,  @AuthenticationPrincipal Jwt user){
         
 		if (user == null) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

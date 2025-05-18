@@ -32,7 +32,7 @@ public class UserService {
 	@Transactional(readOnly = true)
 	public ReadUserDTO getAuthenticatedUserFromSecurityContext() {
 		Jwt principal = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		UserInfo userInfo = auth0Service.getUserInfo(principal);	
+		UserInfo userInfo = auth0Service.getUserInfo(principal);
 		User user = SecurityUtils.mapOauth2AttributesToUser(userInfo.getValues());
 		return getByEmail(user.getEmail()).orElseThrow();
 	}
